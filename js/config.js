@@ -11,7 +11,7 @@ const CONFIG = {
   SUPABASE_URL: 'https://aoqvutykfgmsnoproulj.supabase.co/rest/v1/',
 
   // 3. Supabase anon key
-  SUPABASE_ANON_KEY: 'sb_publishable_Q5N5vpvwHrsLbeHXsuKphg_XFBA7xoK',
+  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvcXZ1dHlrZmdtc25vcHJvdWxqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5NjIwODIsImV4cCI6MjA5NTUzODA4Mn0.UtgvbS3seiptu67MLV7wr2eWTCxcqbSoRj95ysn7IbY',
 
   // Gemini 모델 (변경 불필요)
   GEMINI_MODEL: 'gemini-2.0-flash',
