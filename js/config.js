@@ -5,7 +5,7 @@
 
 const CONFIG = {
   // 1. Gemini API 키 (https://aistudio.google.com)
-  GEMINI_API_KEY: 'AIzaSyBE2O3HM517r-aI9QO2GRWVndptvwoOlCc',
+  GEMINI_API_KEY: 'AIzaSyA0FPtVVgVQkWHqhlU8DRK5mU0BkTtxgk8',
 
   // 2. Supabase URL (https://supabase.com → 프로젝트 → Settings → API)
   SUPABASE_URL: 'https://aoqvutykfgmsnoproulj.supabase.co',
