@@ -1,7 +1,7 @@
 // =============================================
 //  js/report.js — 분석 리포트 로직
 // =============================================
-
+var supabase = window._sb;
 window.addEventListener('DOMContentLoaded', async () => {
   await requireAuth();
   const raw = sessionStorage.getItem('reportData');
