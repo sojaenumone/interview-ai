@@ -2,7 +2,8 @@
 //  js/auth.js — Supabase 인증
 // =============================================
 
-const supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+window._sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+var supabase = window._sb;
 
 // 로그인 필요 페이지 보호
 async function requireAuth() {
