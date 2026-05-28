@@ -1,7 +1,7 @@
 // =============================================
 //  js/interview.js — 면접 세션 로직
 // =============================================
-
+var supabase = window._sb;
 let questions = [], currentIdx = 0, results = [], difficulty = '일반';
 let camStream = null, isMirrored = true, isListening = false, recognition = null;
 let timerInterval = null, seconds = 0;
