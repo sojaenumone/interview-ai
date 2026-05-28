@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>InterviewAI — 대시보드</title>
+<link rel="stylesheet" href="css/style.css"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<style>
+.hero-card { background: linear-gradient(135deg, #4f46e5, #7c3aed); border-radius: 20px; padding: 32px; color: #fff; margin-bottom: 28px; position: relative; overflow: hidden; }
+.hero-card::after { content:'🎯'; position:absolute; right:32px; top:50%; transform:translateY(-50%); font-size:80px; opacity:0.15; }
+.hero-card h2 { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+.hero-card p { font-size: 14px; opacity: 0.85; margin-bottom: 20px; line-height: 1.6; }
+.job-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.job-chip { padding: 6px 14px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); border-radius: 20px; font-size: 13px; color: #fff; cursor: pointer; transition: all 0.2s; }
+.job-chip:hover { background: rgba(255,255,255,0.25); }
+.search-row { display: flex; gap: 10px; }
+.search-row input { flex: 1; padding: 12px 16px; border-radius: 10px; border: none; font-size: 14px; outline: none; background: rgba(255,255,255,0.95); color: #1e293b; }
+.search-row input::placeholder { color: #94a3b8; }
+.search-row button { padding: 12px 24px; background: #fff; color: #4f46e5; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+.search-row button:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+.history-item { display: flex; align-items: center; gap: 16px; padding: 16px 20px; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; }
+.history-item:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.06); border-color: #c7d2fe; }
+.history-icon { width: 44px; height: 44px; border-radius: 10px; background: #eef2ff; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.history-info { flex: 1; }
+.history-title { font-size: 15px; font-weight: 700; color: #1e293b; }
+.history-meta { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+.history-score { text-align: right; }
+.history-score .hs-num { font-size: 22px; font-weight: 800; color: #4f46e5; }
+.history-score .hs-label { font-size: 11px; color: #94a3b8; }
+.empty-state { text-align: center; padding: 48px 20px; color: #94a3b8; }
+.empty-state .es-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-state p { font-size: 14px; line-height: 1.7; }
+.profile-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; }
+.profile-avatar { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #4f46e5, #7c3aed); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 24px; font-weight: 800; margin: 0 auto 12px; }
+</style>
+</head>
+<body>
+<div class="page-wrapper">
+  <!-- 네비게이션 -->
+  <nav class="navbar">
+    <div class="navbar-logo" onclick="location.href='dashboard.html'">
+      <div class="logo-icon">🎯</div>
+      InterviewAI
+    </div>
+    <div class="navbar-menu">
+      <button class="nav-link active" onclick="showSection('home')">홈</button>
+      <button class="nav-link" onclick="showSection('history')">기록</button>
+      <button class="nav-link" onclick="showSection('profile')">프로필</button>
+      <div class="nav-avatar" id="navAvatar" onclick="showSection('profile')">U</div>
+    </div>
+  </nav>
+
+  <!-- 사이드바 -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">메뉴</div>
+      <button class="sidebar-item active" id="sb-home" onclick="showSection('home')"><span class="s-icon">🏠</span>홈</button>
+      <button class="sidebar-item" id="sb-new" onclick="location.href='interview.html'"><span class="s-icon">▶️</span>새 리허설</button>
+      <button class="sidebar-item" id="sb-history" onclick="showSection('history')"><span class="s-icon">📋</span>기록<span class="s-badge" id="historyCount">0</span></button>
+      <button class="sidebar-item" id="sb-profile" onclick="showSection('profile')"><span class="s-icon">👤</span>내 프로필</button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">설정</div>
+      <button class="sidebar-item" onclick="doLogout()"><span class="s-icon">🚪</span>로그아웃</button>
+    </div>
+  </aside>
+
+  <!-- 메인 콘텐츠 -->
+  <main class="content-area">
+
+    <!-- 홈 섹션 -->
+    <div id="sec-home">
+      <!-- 히어로 -->
+      <div class="hero-card">
+        <h2 id="heroGreeting">안녕하세요! 👋</h2>
+        <p>오늘도 면접 준비를 해볼까요?<br/>직무를 검색하거나 빠른 시작으로 바로 연습하세요.</p>
+        <div class="job-chips">
+          <div class="job-chip" onclick="quickStart('프론트엔드 개발자')">프론트엔드 개발자</div>
+          <div class="job-chip" onclick="quickStart('백엔드 개발자')">백엔드 개발자</div>
+          <div class="job-chip" onclick="quickStart('데이터 분석가')">데이터 분석가</div>
+          <div class="job-chip" onclick="quickStart('UX 디자이너')">UX 디자이너</div>
+          <div class="job-chip" onclick="quickStart('PM')">PM</div>
+          <div class="job-chip" onclick="quickStart('마케터')">마케터</div>
+        </div>
+        <div class="search-row">
+          <input type="text" id="jobSearch" placeholder="직무를 직접 입력하세요..." onkeydown="if(event.key==='Enter')startFromSearch()"/>
+          <button onclick="startFromSearch()">면접 시작 →</button>
+        </div>
+      </div>
+
+      <!-- 통계 -->
+      <div class="grid-4 mb-16" style="margin-bottom:24px" id="statsGrid">
+        <div class="stat-card"><div class="stat-icon" style="background:#eef2ff">🎯</div><div class="stat-value" id="st-total">0</div><div class="stat-label">총 리허설</div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#dcfce7">📊</div><div class="stat-value" id="st-avg">-</div><div class="stat-label">평균 점수</div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#fef3c7">🔥</div><div class="stat-value" id="st-streak">0</div><div class="stat-label">연속 연습일</div></div>
+        <div class="stat-card"><div class="stat-icon" style="background:#f0fdf4">⭐</div><div class="stat-value" id="st-best">-</div><div class="stat-label">최고 점수</div></div>
+      </div>
+
+      <!-- 최근 기록 -->
+      <div class="section-header">
+        <div><div class="section-title">최근 리허설</div><div class="section-sub">최근 면접 연습 기록이에요</div></div>
+        <button class="btn btn-secondary" onclick="showSection('history')">전체 보기</button>
+      </div>
+      <div id="recentList"><div class="empty-state"><div class="es-icon">📝</div><p>아직 리허설 기록이 없어요.<br/>첫 번째 면접 연습을 시작해보세요!</p></div></div>
+    </div>
+
+    <!-- 기록 섹션 -->
+    <div id="sec-history" class="hidden">
+      <div class="section-header">
+        <div><div class="section-title">리허설 기록</div><div class="section-sub">모든 면접 연습 기록이에요</div></div>
+        <button class="btn btn-primary" onclick="location.href='interview.html'">+ 새 리허설</button>
+      </div>
+      <div id="historyList"><div class="empty-state"><div class="es-icon">📋</div><p>기록이 없어요.</p></div></div>
+    </div>
+
+    <!-- 프로필 섹션 -->
+    <div id="sec-profile" class="hidden">
+      <div class="section-header">
+        <div><div class="section-title">내 프로필</div></div>
+      </div>
+      <div style="max-width:480px">
+        <div class="profile-card">
+          <div class="profile-avatar" id="profileAvatar">U</div>
+          <div style="text-align:center;margin-bottom:24px">
+            <div style="font-size:18px;font-weight:700" id="profileName">-</div>
+            <div style="font-size:13px;color:#94a3b8;margin-top:4px" id="profileEmail">-</div>
+            <div style="margin-top:8px"><span class="badge badge-primary" id="profileJob">-</span></div>
+          </div>
+          <div class="divider"></div>
+          <div class="form-group"><label>이름</label><input type="text" id="editName" placeholder="이름"/></div>
+          <div class="form-group"><label>목표 직무</label>
+            <select id="editJob">
+              <option value="">선택</option>
+              <option>프론트엔드 개발자</option><option>백엔드 개발자</option>
+              <option>풀스택 개발자</option><option>데이터 분석가</option>
+              <option>UX/UI 디자이너</option><option>PM / 기획자</option>
+              <option>마케터</option><option>영업직</option><option>기타</option>
+            </select>
+          </div>
+          <button class="btn btn-primary btn-full" onclick="saveProfile()">프로필 저장</button>
+          <div style="margin-top:12px">
+          <button class="btn btn-danger btn-full" onclick="doLogout()">로그아웃</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+<script src="js/auth.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>

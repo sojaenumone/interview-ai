@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>InterviewAI — 분석 리포트</title>
+<link rel="stylesheet" href="css/style.css"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config.js"></script>
+<style>
+.report-page { padding-top: 64px; min-height: 100vh; background: #f8fafc; }
+.report-container { max-width: 800px; margin: 0 auto; padding: 32px 20px; }
+.report-hero { background: linear-gradient(135deg, #4f46e5, #7c3aed); border-radius: 20px; padding: 36px; color: #fff; text-align: center; margin-bottom: 28px; position: relative; overflow: hidden; }
+.report-hero::before { content:''; position:absolute; top:-60px; right:-60px; width:200px; height:200px; background:rgba(255,255,255,0.07); border-radius:50%; }
+.report-score { font-size: 72px; font-weight: 900; line-height: 1; margin-bottom: 8px; }
+.report-grade { display: inline-block; padding: 6px 20px; background: rgba(255,255,255,0.2); border-radius: 20px; font-size: 15px; font-weight: 700; margin-bottom: 12px; }
+.report-job { font-size: 14px; opacity: 0.8; }
+.report-date { font-size: 13px; opacity: 0.6; margin-top: 4px; }
+.stats-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 28px; }
+.stat-box { background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; padding: 20px; text-align: center; }
+.stat-box .sb-val { font-size: 28px; font-weight: 800; color: #4f46e5; }
+.stat-box .sb-label { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+.q-report-item { background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; padding: 22px; margin-bottom: 16px; }
+.qr-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; gap: 12px; }
+.qr-q { font-size: 15px; font-weight: 700; color: #1e293b; flex: 1; line-height: 1.5; }
+.qr-score { font-size: 22px; font-weight: 800; color: #4f46e5; flex-shrink: 0; }
+.qr-answer { background: #f8fafc; border-radius: 10px; padding: 12px 14px; font-size: 13px; color: #475569; line-height: 1.7; margin-bottom: 12px; border-left: 3px solid #e2e8f0; }
+.qr-fb { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.qr-fb-box { padding: 10px 12px; border-radius: 8px; font-size: 12px; line-height: 1.6; }
+.qr-fb-good { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+.qr-fb-bad { background: #fff7ed; border: 1px solid #fed7aa; color: #9a3412; }
+.qr-fb-title { font-weight: 700; font-size: 11px; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.4px; }
+.overall-section { background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; padding: 22px; margin-bottom: 28px; }
+.overall-text { font-size: 14px; color: #475569; line-height: 1.8; }
+.action-row { display: flex; gap: 12px; }
+.score-chart { display: flex; align-items: flex-end; gap: 8px; height: 100px; margin: 16px 0; }
+.score-bar-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.score-bar-fill { width: 100%; border-radius: 6px 6px 0 0; background: linear-gradient(180deg, #4f46e5, #7c3aed); transition: height 0.8s ease; min-height: 4px; }
+.score-bar-num { font-size: 11px; font-weight: 700; color: #4f46e5; }
+.score-bar-label { font-size: 10px; color: #94a3b8; text-align: center; }
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <div class="navbar-logo" onclick="location.href='dashboard.html'">
+    <div class="logo-icon">🎯</div>
+    InterviewAI
+  </div>
+  <div class="navbar-menu">
+    <button class="btn btn-secondary" onclick="location.href='dashboard.html'">← 대시보드</button>
+    <button class="btn btn-primary" onclick="location.href='interview.html'">다시 연습</button>
+  </div>
+</nav>
+
+<div class="report-page">
+  <div class="report-container">
+
+    <!-- 히어로 -->
+    <div class="report-hero">
+      <div class="report-score" id="rScore">-</div>
+      <div class="report-grade" id="rGrade">-</div>
+      <div class="report-job" id="rJob">-</div>
+      <div class="report-date" id="rDate">-</div>
+    </div>
+
+    <!-- 통계 -->
+    <div class="stats-row">
+      <div class="stat-box"><div class="sb-val" id="rTotal">-</div><div class="sb-label">총 질문 수</div></div>
+      <div class="stat-box"><div class="sb-val" style="color:#16a34a" id="rBest">-</div><div class="sb-label">최고 점수</div></div>
+      <div class="stat-box"><div class="sb-val" style="color:#d97706" id="rWorst">-</div><div class="sb-label">최저 점수</div></div>
+    </div>
+
+    <!-- 점수 차트 -->
+    <div class="card" style="margin-bottom:24px">
+      <div class="card-body">
+        <div class="section-title" style="font-size:16px;margin-bottom:4px">질문별 점수</div>
+        <div class="score-chart" id="scoreChart"></div>
+      </div>
+    </div>
+
+    <!-- 종합 평가 -->
+    <div class="overall-section">
+      <div style="font-size:16px;font-weight:700;margin-bottom:12px">🧠 종합 평가</div>
+      <div class="overall-text" id="rOverall">분석 중...</div>
+    </div>
+
+    <!-- 질문별 상세 -->
+    <div class="section-header">
+      <div><div class="section-title">질문별 상세 분석</div></div>
+    </div>
+    <div id="qReportList"></div>
+
+    <!-- 액션 -->
+    <div class="action-row" style="margin-top:8px">
+      <button class="btn btn-primary btn-lg" style="flex:1" onclick="location.href='interview.html'">🔄 다시 연습하기</button>
+      <button class="btn btn-secondary btn-lg" style="flex:1" onclick="location.href='dashboard.html'">🏠 대시보드로</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/auth.js"></script>
+<script src="js/report.js"></script>
+</body>
+</html>
